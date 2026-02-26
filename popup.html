@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Carbon Cache</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body class="dark">
+    <div class="app">
+      <header class="app-header">
+        <div>
+          <h1>Carbon Cache</h1>
+          <p class="subtitle">Google Drive + Gmail storage</p>
+        </div>
+        <button id="refreshButton" class="refresh-button" title="Recompute now">
+          ↻
+        </button>
+      </header>
+
+      <div class="tabs">
+        <div id="tabStats" class="tab-content active">
+          <section class="section factor-section">
+            <div class="section-header">
+              <h2>Storage intensity</h2>
+              <p class="section-subtitle">kg CO₂e per GB-year</p>
+            </div>
+            <div id="factorToggle" class="segmented-control">
+              <button data-factor="low" class="segment">Low</button>
+              <button data-factor="mid" class="segment selected">Mid</button>
+              <button data-factor="high" class="segment">High</button>
+            </div>
+          </section>
+
+          <section class="section total-section">
+            <div class="section-header">
+              <h2>Total footprint</h2>
+              <p class="section-subtitle">Annual storage estimate</p>
+            </div>
+            <div class="total-content">
+              <div class="total-row">
+                <span>Total storage</span>
+                <span id="totalStorageValue" class="value">–</span>
+              </div>
+              <div class="total-row">
+                <span>CO₂e range</span>
+                <span id="co2RangeValue" class="value">–</span>
+              </div>
+              <div class="total-row highlighted">
+                <span>Selected factor</span>
+                <span id="co2SelectedValue" class="value">–</span>
+              </div>
+              <p id="whatThisMeans" class="what-this-means"></p>
+            </div>
+          </section>
+
+          <section class="section breakdown-section">
+            <div class="section-header">
+              <h2>Gmail vs Drive</h2>
+              <p class="section-subtitle">Storage + mid CO₂ split</p>
+            </div>
+            <div class="bar-chart">
+              <div class="bar-labels">
+                <span>Gmail</span>
+                <span>Drive</span>
+              </div>
+              <div class="bar-track">
+                <div id="gmailBar" class="bar bar-gmail"></div>
+                <div id="driveBar" class="bar bar-drive"></div>
+              </div>
+              <div class="breakdown-values">
+                <div>
+                  <div id="gmailStorageLabel" class="breakdown-line">–</div>
+                </div>
+                <div>
+                  <div id="driveStorageLabel" class="breakdown-line">–</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section assumptions-section">
+            <details>
+              <summary>Assumptions &amp; uncertainty</summary>
+              <ul class="assumptions-list">
+                <li>
+                  Storage emission factors:
+                  Low = 0.01, Mid = 0.025, High = 0.04 kg CO₂e per GB-year.
+                </li>
+                <li>
+                  Gmail storage is estimated using sample message sizes multiplied
+                  by total message count, not an official quota.
+                </li>
+                <li>
+                  Old heavy emails use search
+                  <code>has:attachment larger:10M older_than:1y</code> and are
+                  approximate.
+                </li>
+                <li>
+                  “Km driven” equivalence uses 0.2 kg CO₂e per km (very rough).
+                </li>
+                <li>
+                  Cleanup and cohort impacts are projections: “If people did this”,
+                  not guarantees.
+                </li>
+              </ul>
+            </details>
+          </section>
+        </div>
+
+        <div id="tabCleanup" class="tab-content">
+          <section class="section cleanup-section">
+            <div class="section-header">
+              <h2>Your cleanup projection</h2>
+              <p class="section-subtitle">
+                If you and others clear some storage
+              </p>
+            </div>
+            <div class="cleanup-content">
+              <div class="input-row">
+                <label for="gbClearedInput">GB you might clear</label>
+                <input
+                  id="gbClearedInput"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value="1"
+                />
+              </div>
+              <div class="cleanup-result">
+                <div class="total-row highlighted">
+                  <span>Your cleanup</span>
+                  <span id="userCleanupValue" class="value">–</span>
+                </div>
+                <p class="hint">
+                  Based on selected storage factor (kg CO₂e/year, mid by default).
+                </p>
+              </div>
+              <div class="cohort-selector">
+                <span>Cohort size</span>
+                <div id="cohortToggle" class="segmented-control small">
+                  <button data-users="100" class="segment selected">100</button>
+                  <button data-users="500" class="segment">500</button>
+                  <button data-users="10000" class="segment">10,000</button>
+                </div>
+              </div>
+              <div class="cleanup-result">
+                <div class="total-row">
+                  <span>Community impact</span>
+                  <span id="cohortCleanupValue" class="value">–</span>
+                </div>
+                <p class="hint">
+                  If this many people did the same cleanup (projection, not a claim).
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section class="section targets-section">
+            <div class="section-header">
+              <h2>Top cleanup targets</h2>
+              <p class="section-subtitle">
+                Largest Drive files and old heavy emails
+              </p>
+            </div>
+            <div class="targets-columns">
+              <div class="card-column">
+                <h3 class="column-title">Drive</h3>
+                <ul id="driveFilesList" class="file-list"></ul>
+              </div>
+              <div class="card-column">
+                <h3 class="column-title">Gmail</h3>
+                <div id="gmailTargets" class="gmail-targets">–</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="tab-bar" id="tabBar">
+        <button class="tab-button active" data-tab="stats">Stats</button>
+        <button class="tab-button" data-tab="cleanup">Cleanup</button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
+

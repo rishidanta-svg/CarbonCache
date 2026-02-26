@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Carbon Cache",
+  "description": "Estimate the carbon impact of your Google Drive and Gmail storage.",
+  "version": "0.1.0",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Carbon Cache"
+  },
+  "permissions": [
+    "identity",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.googleapis.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "oauth2": {
+    "client_id": "319616994782-0qoupmd3b8c770pbdk5nkp7vadnl5581.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/drive.metadata.readonly",
+      "https://www.googleapis.com/auth/gmail.readonly"
+    ]
+  }
+}
