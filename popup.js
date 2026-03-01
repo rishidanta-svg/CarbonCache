@@ -21,8 +21,10 @@ const whatThisMeansEl = document.getElementById("whatThisMeans");
 
 const gmailBarEl = document.getElementById("gmailBar");
 const driveBarEl = document.getElementById("driveBar");
+const photosBarEl = document.getElementById("photosBar");
 const gmailStorageLabelEl = document.getElementById("gmailStorageLabel");
 const driveStorageLabelEl = document.getElementById("driveStorageLabel");
+const photosStorageLabelEl = document.getElementById("photosStorageLabel");
 
 const userCleanupValueEl = document.getElementById("userCleanupValue");
 const cohortCleanupValueEl = document.getElementById("cohortCleanupValue");
@@ -93,24 +95,30 @@ function renderBreakdown() {
   if (!currentData || !currentData.drive || !currentData.gmail) {
     gmailBarEl.style.width = "0%";
     driveBarEl.style.width = "0%";
+    if (photosBarEl) photosBarEl.style.width = "0%";
     gmailStorageLabelEl.textContent = "–";
     driveStorageLabelEl.textContent = "–";
+    if (photosStorageLabelEl) photosStorageLabelEl.textContent = "–";
     return;
   }
 
   const driveGB = currentData.drive.driveGB || 0;
   const gmailGB = currentData.gmail.gmailGB || 0;
-  const totalGB = driveGB + gmailGB;
+  const photosGB = currentData.photos?.photosGB || 0;
+  const totalGB = driveGB + gmailGB + photosGB;
   const efMid = factorToEF("mid");
 
   const gmailShare = totalGB > 0 ? (gmailGB / totalGB) * 100 : 0;
   const driveShare = totalGB > 0 ? (driveGB / totalGB) * 100 : 0;
+  const photosShare = totalGB > 0 ? (photosGB / totalGB) * 100 : 0;
 
   gmailBarEl.style.width = `${gmailShare}%`;
   driveBarEl.style.width = `${driveShare}%`;
+  if (photosBarEl) photosBarEl.style.width = `${photosShare}%`;
 
   const gmailKgMid = gmailGB * efMid;
   const driveKgMid = driveGB * efMid;
+  const photosKgMid = photosGB * efMid;
 
   gmailStorageLabelEl.textContent = `${formatGB(gmailGB)} • ${formatKgCO2(
     gmailKgMid
@@ -118,6 +126,11 @@ function renderBreakdown() {
   driveStorageLabelEl.textContent = `${formatGB(driveGB)} • ${formatKgCO2(
     driveKgMid
   )} / year`;
+  if (photosStorageLabelEl) {
+    photosStorageLabelEl.textContent = `${formatGB(photosGB)} • ${formatKgCO2(
+      photosKgMid
+    )} / year (Photos & other)`;
+  }
 }
 
 function renderCleanupProjection() {
@@ -291,7 +304,6 @@ function init() {
     }
 
     if (!resp || !resp.data) {
-      // No cached data, compute fresh.
       chrome.runtime.sendMessage({ type: "computeCarbon" }, (resp2) => {
         if (chrome.runtime.lastError) {
           setStatus("Error fetching data.");
