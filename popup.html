@@ -55,17 +55,19 @@
 
           <section class="section breakdown-section">
             <div class="section-header">
-              <h2>Gmail vs Drive</h2>
-              <p class="section-subtitle">Storage + mid CO₂ split</p>
+              <h2>Storage breakdown</h2>
+              <p class="section-subtitle">Gmail, Drive, Photos (mid CO₂)</p>
             </div>
             <div class="bar-chart">
               <div class="bar-labels">
                 <span>Gmail</span>
                 <span>Drive</span>
+                <span>Photos</span>
               </div>
               <div class="bar-track">
                 <div id="gmailBar" class="bar bar-gmail"></div>
                 <div id="driveBar" class="bar bar-drive"></div>
+                <div id="photosBar" class="bar bar-photos"></div>
               </div>
               <div class="breakdown-values">
                 <div>
@@ -73,6 +75,9 @@
                 </div>
                 <div>
                   <div id="driveStorageLabel" class="breakdown-line">–</div>
+                </div>
+                <div>
+                  <div id="photosStorageLabel" class="breakdown-line">–</div>
                 </div>
               </div>
             </div>
@@ -89,6 +94,11 @@
                 <li>
                   Gmail storage is estimated using sample message sizes multiplied
                   by total message count, not an official quota.
+                </li>
+                <li>
+                  Google Photos and other Google services are approximated as the
+                  difference between total Google Account storage and Drive +
+                  estimated Gmail.
                 </li>
                 <li>
                   Old heavy emails use search
