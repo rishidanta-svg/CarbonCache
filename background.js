@@ -1,10 +1,7 @@
-// Background service worker for Carbon Cache
-// Handles Google OAuth and API calls to Drive and Gmail.
-
 import { bytesToGB, computeStorageEmissions } from "./utils.js";
 
 const STORAGE_KEY = "carbonCacheData";
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL_MS = 60 * 60 * 1000; 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "getCachedData") {
@@ -63,10 +60,10 @@ async function fetchDriveSummary(token) {
     "https://www.googleapis.com/drive/v3/about?fields=storageQuota(usage,usageInDrive,limit)";
   const about = await apiFetch(aboutUrl, token);
   const quota = about.storageQuota || {};
-  const bytesUsed = Number(quota.usageInDrive || quota.usage || 0);
-  const driveGB = bytesToGB(bytesUsed);
+  const totalBytes = Number(quota.usage || 0);
+  const driveBytes = Number(quota.usageInDrive || 0);
+  const driveGB = bytesToGB(driveBytes);
 
-  // Top 10 largest files
   const filesUrl =
     "https://www.googleapis.com/drive/v3/files" +
     "?orderBy=quotaBytesUsed%20desc" +
@@ -83,7 +80,8 @@ async function fetchDriveSummary(token) {
   }));
 
   return {
-    bytesUsed,
+    totalBytes,
+    driveBytes,
     driveGB,
     topFiles
   };
@@ -191,13 +189,26 @@ async function computeAndCacheCarbonData() {
     fetchGmailSummary(token)
   ]);
 
-  const totalGB = (drive.driveGB || 0) + (gmail.gmailGB || 0);
+  // Approximate Google Photos & other Google services as the residual:
+  // total account storage minus Drive and estimated Gmail bytes.
+  let photosBytes = 0;
+  if (drive.totalBytes && drive.driveBytes !== undefined && gmail.estimatedBytes !== undefined) {
+    const residual = drive.totalBytes - drive.driveBytes - gmail.estimatedBytes;
+    photosBytes = residual > 0 ? residual : 0;
+  }
+  const photosGB = bytesToGB(photosBytes);
+
+  const totalGB = (drive.driveGB || 0) + (gmail.gmailGB || 0) + photosGB;
   const storageEmissions = computeStorageEmissions(totalGB);
 
   const data = {
     generatedAt: Date.now(),
     drive,
     gmail,
+    photos: {
+      photosBytes,
+      photosGB
+    },
     storage: {
       totalGB,
       emissions: storageEmissions
@@ -207,7 +218,9 @@ async function computeAndCacheCarbonData() {
       gmailStorageExplanation:
         "Gmail storage is estimated using average message size from a sample of recent messages multiplied by total message count.",
       largeAttachmentDefinition:
-        "Large Gmail attachments are counted using search: has:attachment larger:10M older_than:1y."
+        "Large Gmail attachments are counted using search: has:attachment larger:10M older_than:1y.",
+      photosStorageExplanation:
+        "Google Photos and other Google services are approximated as the residual between total account storage and Drive + estimated Gmail usage."
     }
   };
 
