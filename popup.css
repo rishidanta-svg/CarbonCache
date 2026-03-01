@@ -171,6 +171,13 @@ body.dark {
   background: linear-gradient(90deg, #22c55e, #4ade80);
 }
 
+.bar-photos {
+  left: 0;
+  background: linear-gradient(90deg, #f97316, #fb923c);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+
 .breakdown-values {
   margin-top: 6px;
 }
